@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Restaurant Locator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      height: 400px;
+      width: 100%;
+    }
+
+    .restaurant {
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    .restaurant img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      margin-bottom: 10px;
+    }
+
+    .search-bar {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Restaurant Locator</h1>
+  <div class="search-bar">
+    <label for="search">Search for restaurants:</label>
+    <input type="text" id="search" placeholder="Enter a location or restaurant name">
+    <button onclick="searchRestaurants()">Search</button>
+  </div>
+  <div id="map"></div>
+  <div id="restaurants"></div>
+
+  <script>
+    var map;
+
+    // Function to initialize and display the map
+    function initMap() {
+      // Define the coordinates for your area or default location
+      var defaultLocation = { lat: 40.7128, lng: -74.0060 };
+
+      // Create a map centered at the default location
+      map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 12,
+        center: defaultLocation
+      });
+
+      // Call the function to fetch restaurants and display markers at the default location
+      fetchRestaurants(defaultLocation);
+    }
+
+    // Function to fetch restaurants based on location and display markers
+    function fetchRestaurants(location) {
+      // Clear existing markers
+      clearMarkers();
+
+      // Make an API call to fetch restaurant data based on location
+      // Replace 'YOUR_API_ENDPOINT' with the actual API endpoint
+      fetch('YOUR_API_ENDPOINT?lat=' + location.lat + '&lng=' + location.lng)
+        .then(response => response.json())
+        .then(data => {
+          // Loop through the restaurants and create markers and info windows
+          data.forEach(restaurant => {
+            var marker = new google.maps.Marker({
+              position: { lat: restaurant.lat, lng: restaurant.lng },
+              map: map,
+              title: restaurant.name
+            });
+
+            // Add a click event listener to the marker to show the restaurant details
+            marker.addListener('click', function() {
+              alert(restaurant.name + '\n' + restaurant.address);
+            });
+          });
+        })
+        .catch(error => {
+          console.log('Error:', error);
+        });
+    }
+
+    // Function to search for restaurants based on user input
+    function searchRestaurants() {
+      var searchInput = document.getElementById('search').value;
+      if (searchInput.trim() === '') {
+        // If search input is empty, fetch restaurants at the default location
+        fetchRestaurants(map.getCenter());
+      } else {
+        // Otherwise, geocode the search input to get the location coordinates
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ address: searchInput }, function(results, status) {
+          if (status === 'OK' && results.length > 0) {
+            var location = results[0].geometry.location;
+            map.setCenter(location);
+            fetchRestaurants(location);
+          } else {
+            alert('No results found.');
+          }
+        });
+      }
+    }
+
+    // Function to find the user's current location
+    function findCurrentLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          var location = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          map.setCenter(location);
+          fetchRestaurants(location);
+        }, function() {
+          alert('Unable to retrieve your location.');
+        });
+      } else {
+        alert('Geolocation is not supported by your browser.');
+      }
+    }
+
+    // Function to clear markers from the map
+    function clearMarkers() {
+      // Implement your code to clear markers from the map
+      // (e.g., store the markers in an array and call setMap(null) on each marker)
+    }
+  </script>
+  <!-- Replace 'YOUR_API_KEY' with your actual Google Maps API key -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBxgFm8A0qnrxYKkvbQHCfF9WWBBS_SyjI&callback=initMap" async defer></script>
+
+  <button onclick="findCurrentLocation()">Find My Location</button>
+</body>
+</html>
